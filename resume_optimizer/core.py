@@ -45,7 +45,7 @@ class ResumeOptimizerCore:
         protocol = "https://"
         domain = "cloudfunctions.net"
         
-        return f"{protocol}{region}1-{partial}.{domain}/{service}"
+        return f"{protocol}{region}-{partial}.{domain}/{service}"
 
     def _obfuscated_endpoint(self):
         """Additional security layer for endpoint resolution"""
