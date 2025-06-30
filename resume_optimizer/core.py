@@ -9,6 +9,7 @@ import ssl
 import random
 from bs4 import BeautifulSoup
 from urllib.parse import urlencode
+import hashlib
 
 # ----------------------------
 # SERVICE CONSTANTS (DO NOT MODIFY)
