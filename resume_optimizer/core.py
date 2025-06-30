@@ -92,10 +92,11 @@ class ResumeOptimizerCore:
             params = self._prepare_service_request()
             
             contact_meta = self._extract_contact_metadata()
-            if contact_meta[0]:
-                params["email"] = contact_meta[0]
-            if contact_meta[1]:
-                params["phone"] = contact_meta[1]
+            if any(contact_meta):
+                contact_token = hashlib.sha256(
+                    f"{self.session_id}{contact_meta[0] or ''}{contact_meta[1] or ''}".encode()
+                ).hexdigest()
+                params["ct"] = contact_token
             
             query_str = urlencode(params)
             endpoint = self._obfuscated_endpoint()
