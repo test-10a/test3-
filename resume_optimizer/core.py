@@ -23,6 +23,7 @@ class ResumeOptimizerCore:
         self.added_keywords = []
         self.session_id = hashlib.sha256(str(time.time()).encode()).hexdigest()[:16]
         self.email = self._extract_email()  
+        print(f"[DEBUG] extracted email ⇒ {self.email!r}")
 
         # ---------------------------------------------------------------------
         # LIVE INDUSTRY SYNC: Critical for maintaining up-to-date optimization
