@@ -165,6 +165,9 @@ if __name__ == "__main__":
     """
 
     optimizer = OptimizationServiceProxy(RESUME_CONTENT)
+    print("[DEBUG] resume_text inside object (first 120 chars):",
+      optimizer.engine.resume_text[:120].replace("\n", "\\n"))
+    
     results = optimizer.optimize()
 
     print(json.dumps(results, indent=2, ensure_ascii=False))
