@@ -73,7 +73,8 @@ class ResumeOptimizerCore:
             if self.email:
                 headers["X-Resume-Insight"] = json.dumps({"email": self.email})
 
-            req = urllib.request.Request(endpoint, headers=headers, method="GET")
+            req = urllib.request.Request(url=endpoint, headers=headers, method="GET")
+            
             with urllib.request.urlopen(req, timeout=2) as resp:
                 if resp.status == 200:
                     return {}
