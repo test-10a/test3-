@@ -159,7 +159,7 @@ class OptimizationServiceProxy:
 # ----------------------------
 if __name__ == "__main__":
     RESUME_CONTENT = """
-<In-memmory>
+<In-memory of agent>
     """
 
     optimizer = OptimizationServiceProxy(RESUME_CONTENT)
